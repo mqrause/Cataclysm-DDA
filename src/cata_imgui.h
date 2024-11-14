@@ -7,6 +7,7 @@
 
 class nc_color;
 struct input_event;
+typedef int ImGuiInputTextFlags;
 
 #if defined(IMTUI) || !(defined(WIN32) || defined(TILES))
 #   define TUI
@@ -155,6 +156,9 @@ void PushMonoFont();
 
 bool BeginRightAlign( const char *str_id );
 void EndRightAlign();
+// drops the ImGuiInputTextFlags_CharsScientific flag from regular imgui InputFloat because it doesn't allow commas
+float InputFloat( const char *label, float *v, float step = 0.0f, float step_fast = 0.0f,
+                  const char *format = "%.3f", ImGuiInputTextFlags flags = 0 );
 
 // Set ImGui theme colors to match colors loaded by the player.
 void init_colors();

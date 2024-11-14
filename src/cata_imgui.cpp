@@ -1058,6 +1058,14 @@ void cataimgui::EndRightAlign()
     ImGui::EndTable();
 }
 
+float cataimgui::InputFloat( const char *label, float *v, float step, float step_fast,
+                             const char *format, ImGuiInputTextFlags flags )
+{
+    return ImGui::InputScalar( label, ImGuiDataType_Float, ( void * )v,
+                               ( void * )( step > 0.0f ? &step : NULL ), ( void * )( step_fast > 0.0f ? &step_fast : NULL ),
+                               format, flags );
+}
+
 void cataimgui::init_colors()
 {
     ImGuiStyle &style = ImGui::GetStyle();
