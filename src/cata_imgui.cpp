@@ -1061,9 +1061,9 @@ void cataimgui::EndRightAlign()
 float cataimgui::InputFloat( const char *label, float *v, float step, float step_fast,
                              const char *format, ImGuiInputTextFlags flags )
 {
-    return ImGui::InputScalar( label, ImGuiDataType_Float, ( void * )v,
-                               ( void * )( step > 0.0f ? &step : NULL ), ( void * )( step_fast > 0.0f ? &step_fast : NULL ),
-                               format, flags );
+    return ImGui::InputScalar( label, ImGuiDataType_Float, static_cast<void *>( v ),
+                               static_cast<void *>( step > 0.0f ? &step : nullptr ),
+                               static_cast<void *>( step_fast > 0.0f ? &step_fast : nullptr ), format, flags );
 }
 
 void cataimgui::init_colors()
