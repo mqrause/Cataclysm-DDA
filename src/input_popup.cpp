@@ -141,15 +141,36 @@ string_input_popup_imgui::string_input_popup_imgui( int width, const std::string
     set_text( old_input );
 }
 
+static int history_callback( ImGuiInputTextCallbackData *data )
+{
+    string_input_popup_imgui *popup = static_cast<string_input_popup_imgui *>( data->UserData );
+
+    if( data->EventFlag == ImGuiInputTextFlags_CallbackHistory ) {
+        popup->update_input_history( data );
+    }
+
+    return 0;
+}
+
 void string_input_popup_imgui::draw_input_control()
 {
+    ImGuiInputTextCallback callback = nullptr;
+    void *data = nullptr;
+    ImGuiInputTextFlags flags = ImGuiInputTextFlags_None;
+
+    if( !is_uilist_history ) {
+        callback = history_callback;
+        data = this;
+        flags |= ImGuiInputTextFlags_CallbackHistory;
+    }
+
     // shrink width of input field if we only allow short inputs
     float input_width = str_width_to_pixels( max_input_length );
     if( input_width < ImGui::CalcItemWidth() ) {
         ImGui::SetNextItemWidth( input_width );
     }
 
-    ImGui::InputText( "##string_input", text.data(), max_input_length );
+    ImGui::InputText( "##string_input", text.data(), max_input_length, flags, callback, data );
 }
 
 void string_input_popup_imgui::set_identifier( const std::string &ident )
@@ -203,8 +224,20 @@ void string_input_popup_imgui::show_history()
     }
 }
 
-void string_input_popup_imgui::update_input_history( bool up )
+static void set_text( ImGuiInputTextCallbackData *data, const std::string &text )
 {
+    data->DeleteChars( 0, data->BufTextLen );
+    data->InsertChars( 0, text.c_str() );
+}
+
+void string_input_popup_imgui::update_input_history( ImGuiInputTextCallbackData *data )
+{
+    if( data->EventKey != ImGuiKey_UpArrow && data->EventKey != ImGuiKey_DownArrow ) {
+        return;
+    }
+
+    bool up = data->EventKey == ImGuiKey_UpArrow;
+
     if( identifier.empty() ) {
         return;
     }
@@ -232,7 +265,7 @@ void string_input_popup_imgui::update_input_history( bool up )
         }
     } else {
         if( history_index == 1 ) {
-            set_text( session_input );
+            ::set_text( data, session_input );
             //show initial string entered and 'return'
             history_index = 0;
             return;
@@ -242,7 +275,7 @@ void string_input_popup_imgui::update_input_history( bool up )
     }
 
     history_index += up ? 1 : -1;
-    set_text( hist[hist.size() - history_index] );
+    ::set_text( data, hist[hist.size() - history_index] );
 }
 
 void string_input_popup_imgui::add_to_history( const std::string &value ) const
@@ -273,14 +306,9 @@ std::string string_input_popup_imgui::query()
             return txt;
         } else if( action == "TEXT.QUIT" ) {
             break;
-        } else if( action == "TEXT.UP" ) {
-            if( is_uilist_history ) {
-                show_history();
-            } else {
-                update_input_history( true );
-            }
-        } else if( action == "TEXT.DOWN" && !is_uilist_history ) {
-            update_input_history( false );
+        } else if( action == "TEXT.UP" && is_uilist_history ) {
+            // non-uilist history is handled inside input callback
+            show_history();
         }
 
         // mouse click on x to close leads here
