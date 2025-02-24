@@ -928,6 +928,12 @@ void Item_group::replace_items( const std::unordered_map<itype_id, itype_id> &re
     for( const std::unique_ptr<Item_spawn_data> &elem : items ) {
         elem->replace_items( replacements );
     }
+    if( container_item ) {
+        auto it = replacements.find( *container_item );
+        if( it != replacements.end() ) {
+            container_item = it->second;
+        }
+    }
 }
 
 bool Item_group::has_item( const itype_id &itemid ) const
