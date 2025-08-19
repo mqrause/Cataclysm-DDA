@@ -1276,7 +1276,24 @@ void display_item_info( const std::vector<iteminfo> &vItemDisplay,
         if( i.bIsArt ) {
             cataimgui::PushMonoFont();
         }
-        if( i.sType == "DESCRIPTION" ) {
+        if( i.isTable ) {
+            std::vector<std::string> rows = string_split( i.sName, ';' );
+            int col_count = string_split( rows[0], ',' ).size();
+            if( ImGui::BeginTable( "some_id", col_count ) ) {
+                for( int i = 0; i < col_count; i++ ) {
+                    ImGui::TableSetupColumn( std::to_string( i ).c_str() );
+                }
+                for( std::string row : rows ) {
+                    ImGui::TableNextRow();
+                    std::vector<std::string> cols = string_split( row, ',' );
+                    for( std::string &col : cols ) {
+                        ImGui::TableNextColumn();
+                        ImGui::Text( col.c_str() );
+                    }
+                }
+                ImGui::EndTable();
+            }
+        } else if( i.sType == "DESCRIPTION" ) {
             if( i.bDrawName ) {
                 if( i.sName == "--" ) {
                     if( !bAlreadyHasNewLine ) {

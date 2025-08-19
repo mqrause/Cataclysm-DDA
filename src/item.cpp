@@ -3895,7 +3895,9 @@ void item::armor_protection_info( std::vector<iteminfo> &info, const iteminfo_qu
 
         bool display_median = percent_best < 50 && percent_worst < 50;
 
-        if( display_median ) {
+
+        info.emplace_back( bp_cat, "protection,5%,95%;bash,1.00,7.60;cut,1.00,9.80", iteminfo::is_table );
+        /*if( display_median ) {
             info.emplace_back( "DESCRIPTION",
                                string_format( "<bold>%s</bold>: <bad>%d%%</bad>, <color_c_yellow>Median</color>, <good>%d%%</good>",
                                               _( "Protection" ), percent_worst, percent_best ) );
@@ -3906,7 +3908,6 @@ void item::armor_protection_info( std::vector<iteminfo> &info, const iteminfo_qu
         } else {
             info.emplace_back( "DESCRIPTION", string_format( "<bold>%s</bold>:", _( "Protection" ) ) );
         }
-
         for( const damage_info_order &dio : damage_info_order::get_all(
                  damage_info_order::info_type::PROT ) ) {
             if( best_res.resist_vals.count( dio.dmg_type ) <= 0 ||
@@ -3943,7 +3944,7 @@ void item::armor_protection_info( std::vector<iteminfo> &info, const iteminfo_qu
             info.emplace_back( bp_cat, string_format( "%s%s", space, _( "Environmental: " ) ),
                                get_base_env_resist( *this ) );
             printed_any = true;
-        }
+        }*/
         // if we haven't printed any armor data acknowledge that
         if( !printed_any ) {
             info.emplace_back( bp_cat, string_format( "%s%s", space, _( "Negligible Protection" ) ) );
@@ -13285,6 +13286,7 @@ iteminfo::iteminfo( const std::string &Type, const std::string &Name, const std:
     bLowerIsBetter = static_cast<bool>( Flags & lower_is_better );
     bDrawName = !( Flags & no_name );
     bIsArt = Flags & is_art;
+    isTable = Flags & is_table;
 }
 
 iteminfo::iteminfo( const std::string &Type, const std::string &Name, flags Flags )
