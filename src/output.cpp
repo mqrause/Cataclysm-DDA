@@ -1307,38 +1307,57 @@ static nc_color get_comparison_color( const iteminfo &i,
     return thisColor;
 }
 
-static int get_num_cols( std::vector<std::string> &rows )
+struct table_helper {
+    int num_cols;
+    float width;
+    std::vector<float> col_widths;
+};
+
+static table_helper get_table_size( std::vector<std::string> &rows )
 {
-    int cols = 0;
+    table_helper helper{ 0, 0.f, {} };
 
     for( const std::string &row : rows ) {
-        cols = std::max( cols, static_cast<int>( string_split( row, ';' ).size() ) );
+        std::vector<std::string> cols = string_split( row, ';' );
+        helper.num_cols = std::max( helper.num_cols, static_cast<int>( cols.size() ) );
+        float tmp = 0.f;
+        for( size_t i = 0; i < cols.size(); i++ ) {
+            float col_width = ImGui::CalcTextSize( remove_color_tags( cols[i] ).c_str(), nullptr, true ).x;
+            tmp += col_width;
+            if( i < helper.col_widths.size() ) {
+                helper.col_widths[i] = std::max( helper.col_widths[i], col_width );
+            } else {
+                helper.col_widths.push_back( col_width );
+            }
+        }
+        helper.width = std::max( helper.width, tmp );
     }
 
-    return cols;
+    return helper;
 }
 
 static void draw_table( std::string_view s )
 {
     std::vector<std::string> rows = string_split( s, '\n' );
-    int num_cols = get_num_cols( rows );
+    table_helper helper = get_table_size( rows );
 
-    if( rows.empty() || num_cols == 0 ) {
+    if( rows.empty() || helper.num_cols == 0 ) {
         return;
     }
 
-    if( cataimgui::BeginTable( "##ITEMINFO_TABLE", num_cols,
-                               ImGuiTableFlags_BordersH | ImGuiTableFlags_BordersV ) ) {
+    if( cataimgui::BeginTable( "##ITEMINFO_TABLE", helper.num_cols,
+                               ImGuiTableFlags_BordersH | ImGuiTableFlags_BordersV, ImVec2( helper.width, 0.f ) ) ) {
         const std::vector<std::string> chopped_up = string_split( rows.front(), ';' );
-        for( const std::string &cell_text : chopped_up ) {
+        for( size_t i = 0; i < helper.num_cols; i++ ) {
             // this prefix prevents imgui from drawing the text. We still have color tags, which imgui won't parse, so we don't want those exposed to the user.
             // But we still want proper column IDs. So we put them in, but we *hide them* with this.
             // This results in a column with an ID of e.g.
             // ##<color_white>Protection:</color>
             //
             // Not great for debugging, but better than having a column with default (randomly generated number) ID!
-            const std::string invisible_ID_label = "##" + cell_text;
-            cataimgui::TableSetupColumn( invisible_ID_label.c_str(), ImGuiTableColumnFlags_WidthStretch );
+            const std::string invisible_ID_label = "##" + ( i < chopped_up.size() ? chopped_up[i] :
+                                                   std::to_string( i ) );
+            cataimgui::TableSetupColumn( invisible_ID_label.c_str(), 0, helper.col_widths[i] );
         }
         ImGui::TableHeadersRow();
         // After putting in the invisible labels in the last for-loop, this writes the actual text. Just the same text without the ## marker, and
