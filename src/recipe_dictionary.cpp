@@ -622,6 +622,13 @@ void recipe_dictionary::load_practice( const JsonObject &jo, const std::string &
 
 void recipe_dictionary::load_nested_category( const JsonObject &jo, const std::string &src )
 {
+    for( const JsonValue &obj : jo.get_array( "nested_category_data" ) ) {
+        recipe_id nested = recipe_id( obj.get_string() );
+        if( !recipe_dict.recipes.count( nested ) ) {
+            deferred.emplace_back( jo, src );
+            return;
+        }
+    }
     load( jo, src, recipe_dict.recipes );
 }
 

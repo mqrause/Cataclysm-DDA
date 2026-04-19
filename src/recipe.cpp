@@ -272,6 +272,14 @@ void recipe::load( const JsonObject &jo, const std::string_view src )
             jo.throw_error_at( "autolearn",
                                "nested category should not have an autolearn, they are only displayed if one of their recipes should be." );
         }
+        /*if( jo.has_member( "difficulty" ) ) {
+            jo.throw_error_at( "difficulty",
+                               "nested category should not have a difficulty, it is determined by nested recipes." );
+        }*/
+        for( const JsonValue &val : jo.get_array( "nested_category_data" ) ) {
+            recipe_id nest = recipe_id( val.get_string() );
+            difficulty = std::max( difficulty, nest->difficulty );
+        }
         // nested recipes are never learned directly
         never_learn = true;
     } else {
@@ -357,7 +365,9 @@ void recipe::load( const JsonObject &jo, const std::string_view src )
         optional( jo, was_loaded, "time", time, time_duration_as_moves_reader{}, 0 );
     }
 
-    optional( jo, was_loaded, "difficulty", difficulty, numeric_bound_reader<int> {0, MAX_SKILL} );
+    if( type != "nested_category" ) {
+        optional( jo, was_loaded, "difficulty", difficulty, numeric_bound_reader<int> {0, MAX_SKILL} );
+    }
     optional( jo, was_loaded, "flags", flags );
 
     // automatically set contained if we specify as container
