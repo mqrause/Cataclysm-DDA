@@ -66,6 +66,7 @@ enum class segments : std::size_t {
 
     // separate flags for TYPE
     VARIANT,
+    SNIPPET,
     COMPONENTS,
     CORPSE,
 

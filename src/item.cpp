@@ -840,6 +840,11 @@ bool _stacks_variant( item const &lhs, item const &rhs )
              lhs.itype_variant().id == rhs.itype_variant().id );
 }
 
+bool _stacks_snippet( item const &lhs, item const &rhs )
+{
+    return lhs.snip_id == rhs.snip_id;
+}
+
 bool _stacks_components( item const &lhs, item const &rhs, bool check_components )
 {
     return ( !check_components && !lhs.is_comestible() && !lhs.is_craft() ) ||
@@ -875,6 +880,7 @@ stacking_info item::stacks_with( const item &rhs, bool check_components, bool co
     }
 
     bits.set( tname::segments::VARIANT, _stacks_variant( *this, rhs ) );
+    bits.set( tname::segments::SNIPPET, _stacks_snippet( *this, rhs ) );
     bool const same_type = bits[tname::segments::TYPE] && bits[tname::segments::VARIANT];
 
     bits.set( tname::segments::RELIC, is_same_relic( rhs ) );
