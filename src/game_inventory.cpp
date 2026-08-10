@@ -1667,14 +1667,14 @@ item_location game_menus::inv::ebookread( Character &you, item_location &ereader
 
 drop_locations game_menus::inv::ebooksave( Character &who, item_location &ereader )
 {
-    std::set<itype_id> already_saved;
+    std::map<itype_id, std::set<snippet_id>> already_saved;
     for( const item *efile : ereader->efiles() ) {
         if(
             efile->is_estorable() &&
             efile->is_ecopiable()
             //already_saved.find(ebook->typeId()) == already_saved.end()
         ) {
-            already_saved.insert( efile->typeId() );
+            already_saved[efile->typeId()].insert( efile->snip_id );
         }
     }
 
@@ -1683,7 +1683,7 @@ drop_locations game_menus::inv::ebooksave( Character &who, item_location &ereade
         return ( loc->is_owned_by( who, true ) &&
                  loc->is_estorable() &&
                  loc->is_ecopiable() &&
-                 !already_saved.count( loc->typeId() ) );
+                 !already_saved[loc->typeId()].count( loc->snip_id ) );
     } );
 
     const int available_charges = ereader->ammo_remaining( );
@@ -1716,7 +1716,7 @@ drop_locations game_menus::inv::ebooksave( Character &who, item_location &ereade
                                    make_raw_stats, /*allow_select_contained=*/true );
     inv_s.add_character_items( who );
     inv_s.add_nearby_items( PICKUP_RANGE );
-    inv_s.remove_duplicate_itypes( true );
+    inv_s.remove_duplicate_itypes( true, true );
     inv_s.set_title( _( "Scan which books?" ) );
     if( inv_s.empty() ) {
         popup( std::string( _( "You have no books to scan." ) ), PF_GET_KEY );

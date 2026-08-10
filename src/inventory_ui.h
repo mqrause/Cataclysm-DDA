@@ -520,8 +520,9 @@ class inventory_column
          * Call after items are added to reduce entries to a std::set of single itype_ids.
          * @param include_variants - if true, treat variants as itype_ids -- so two identical variants will
          * still be removed but different variants of the same itype_id will not.
+         * @param include_snippets - same as above but with snippets
          */
-        void remove_duplicate_itypes( bool include_variants );
+        void remove_duplicate_itypes( bool include_variants, bool include_snippets );
 
     protected:
         /**
@@ -715,7 +716,7 @@ class inventory_selector
 
         void categorize_map_items( bool toggle );
 
-        void remove_duplicate_itypes( bool include_variants );
+        void remove_duplicate_itypes( bool include_variants, bool include_snippets = true );
 
         /// An array of cells for the stat lines. Example: ["Weight (kg)", "10", "/", "20"].
         using stat = std::array<std::string, 4>;

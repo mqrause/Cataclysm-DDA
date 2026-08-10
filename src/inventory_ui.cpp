@@ -3546,10 +3546,11 @@ void inventory_column::cycle_hide_override()
     uistate.hide_entries_override = hide_entries_override;
 }
 
-void inventory_column::remove_duplicate_itypes( bool include_variants )
+void inventory_column::remove_duplicate_itypes( bool include_variants, bool include_snippets )
 {
     std::set<itype_id> item_types;
-    std::set<std::string> variant_types;
+    std::map<itype_id, std::set<std::string>> variant_types;
+    std::map<itype_id, std::set<snippet_id>> snippet_types;
     std::vector<item_location> held_locs;
 
     auto audit_entries = [&]( inventory_column::entries_t &audited_entries ) {
@@ -3557,11 +3558,19 @@ void inventory_column::remove_duplicate_itypes( bool include_variants )
             for( item_location &loc : inv_entry.locations ) {
                 itype_id item_id = loc->typeId();
                 std::string variant_id = loc->has_itype_variant() ? loc->itype_variant().id : "";
-                if( !item_types.count( item_id ) || ( include_variants && !variant_types.count( variant_id ) ) ) {
+                snippet_id snip_id = loc->snip_id;
+                if( !item_types.count( item_id ) ||
+                    ( include_variants && !variant_types[item_id].count( variant_id ) ) ||
+                    ( include_snippets && !snippet_types[item_id].count( snip_id ) ) ) {
                     held_locs.emplace_back( loc );
                 }
                 item_types.insert( item_id );
-                variant_types.insert( variant_id );
+                if( include_variants ) {
+                    variant_types[item_id].insert( variant_id );
+                }
+                if( include_snippets ) {
+                    snippet_types[item_id].insert( snip_id );
+                }
             }
         }
     };
@@ -5419,9 +5428,9 @@ void inventory_selector::categorize_map_items( bool toggle )
     _categorize_map_items = toggle;
 }
 
-void inventory_selector::remove_duplicate_itypes( bool include_variants )
+void inventory_selector::remove_duplicate_itypes( bool include_variants, bool include_snippets )
 {
     for( inventory_column *&column : columns ) {
-        column->remove_duplicate_itypes( include_variants );
+        column->remove_duplicate_itypes( include_variants, include_snippets );
     }
 }
