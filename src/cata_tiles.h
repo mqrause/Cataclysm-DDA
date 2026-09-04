@@ -167,6 +167,9 @@ class texture
         std::pair<int, int> dimension() const {
             return std::make_pair( srcrect.w, srcrect.h );
         }
+        const SDL_Rect &get_srcrect() const {
+            return srcrect;
+        }
         /// Returns the opaque pixel bounding box relative to the sprite origin.
         const SDL_Rect &get_opaque_rect() const {
             return opaque_rect;
@@ -556,6 +559,14 @@ struct formatted_text {
     formatted_text( const std::string &text, int color, direction text_direction );
 };
 
+struct texture_draw_data {
+    SDL_Texture *texture;
+    SDL_Rect dimensions;
+    // avoiding ImVec2 here
+    std::pair<float, float> uv0;
+    std::pair<float, float> uv1;
+};
+
 /** type used for color blocks overlays.
  * first: The SDL blend mode used for the color.
  * second:
@@ -593,6 +604,9 @@ class cata_tiles
         /** Minimap functionality */
         void draw_minimap( const point &dest, const tripoint_bub_ms &center, int width, int height );
 
+        std::optional<texture_draw_data> get_texture_draw_data( const std::string &id,
+                TILE_CATEGORY categroy, const tripoint_bub_ms &p );
+
     protected:
         /** How many rows and columns of tiles fit into given dimensions, fully
          ** or partially shown, but disregarding any extra contents outside the
@@ -629,6 +643,8 @@ class cata_tiles
                                       std::string &draw_id );
 
     private:
+        unsigned int get_variant_seed( const tile_type &display_tile, TILE_CATEGORY category,
+                                       const tripoint_bub_ms &pos, const std::string &found_id );
         bool draw_from_id_string_internal( const std::string &id, const tripoint_bub_ms &pos, int subtile,
                                            int rota,
                                            lit_level ll, int retract, bool apply_night_vision_goggles, int &height_3d );
