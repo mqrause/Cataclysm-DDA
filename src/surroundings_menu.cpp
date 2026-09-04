@@ -25,6 +25,7 @@
 #include "game_constants.h"
 #include "game_inventory.h"
 #include "game_ui.h"
+#include "imgui_texture.h"
 #include "input_popup.h"
 #include "item.h"
 #include "item_contents.h"
@@ -34,6 +35,7 @@
 #include "mapdata.h"
 #include "messages.h"
 #include "monster.h"
+#include "mtype.h"
 #include "npc.h"
 #include "options.h"
 #include "output.h"
@@ -933,6 +935,9 @@ void surroundings_menu::draw_item_tab()
                         ImGui::TableSetupColumn( remove_color_tags( selected_it->display_name() ).c_str() );
                         ImGui::TableHeadersRow();
                         ImGui::TableNextColumn();
+                        tripoint_bub_ms pos = get_selected_pos_bub().value_or( tripoint_bub_ms() );
+                        cataimgui::draw_texture( selected_it->typeId(), pos );
+                        ImGui::TableNextColumn();
                         // embedded info for selected item
                         std::vector<iteminfo> selected_info;
                         std::vector<iteminfo> dummy_info;
@@ -1075,6 +1080,12 @@ void surroundings_menu::draw_monster_tab()
         if( info_height > 0 ) {
             if( ImGui::BeginChild( "info", ImVec2( 0.0f, str_height_to_pixels( info_height ) ) ) ) {
                 if( monster_data.selected_entry ) {
+                    const Creature *critter = monster_data.selected_entry->get_selected_entity();
+                    if( critter->is_monster() ) {
+                        tripoint_bub_ms pos = get_selected_pos_bub().value_or( tripoint_bub_ms() );
+                        cataimgui::draw_texture( critter->as_monster()->type->id, pos );
+                    }
+                    // can't draw npcs yet
                     draw_extended_description(
                         monster_data.selected_entry->get_selected_entity()->extended_description(), info_scroll );
                 }
@@ -1154,6 +1165,15 @@ void surroundings_menu::draw_terfurn_tab()
         if( info_height > 0 ) {
             if( ImGui::BeginChild( "info", ImVec2( 0.0f, str_height_to_pixels( info_height ) ) ) ) {
                 if( terfurn_data.selected_entry ) {
+                    tripoint_bub_ms pos = get_selected_pos_bub().value_or( tripoint_bub_ms() );
+                    if( terfurn_data.selected_entry->get_selected_entity()->is_terrain() ) {
+                        const ter_t *ter = static_cast<const ter_t *>( terfurn_data.selected_entry->get_selected_entity() );
+                        cataimgui::draw_texture( ter->id, pos );
+                    } else {
+                        const furn_t *furn = static_cast<const furn_t *>
+                                             ( terfurn_data.selected_entry->get_selected_entity() );
+                        cataimgui::draw_texture( furn->id, pos );
+                    }
                     draw_extended_description(
                         terfurn_data.selected_entry->get_selected_entity()->extended_description(), info_scroll );
                 }
@@ -1323,6 +1343,18 @@ std::optional<tripoint_rel_ms> surroundings_menu::get_selected_pos()
 {
     tab_data *data = get_selected_data();
     return data->get_selected_pos();
+}
+
+std::optional<tripoint_bub_ms> surroundings_menu::get_selected_pos_bub()
+{
+    tab_data *data = get_selected_data();
+    std::optional<tripoint_rel_ms> pos = data->get_selected_pos();
+
+    if( !pos ) {
+        return std::nullopt;
+    }
+
+    return you.pos_bub() + *pos;
 }
 
 static void toggle_safemode_entry( const map_entity_stack<Creature> *mstack, bool add )

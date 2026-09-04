@@ -192,6 +192,7 @@ class surroundings_menu : public cataimgui::window
         void update_path_end();
         void handle_list_input( const std::string &action );
         std::optional<tripoint_rel_ms> get_selected_pos();
+        std::optional<tripoint_bub_ms> get_selected_pos_bub();
 
         tab_data *get_tab_data( surroundings_menu_tab_enum tab );
         tab_data *get_selected_data();
